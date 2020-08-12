@@ -17,9 +17,8 @@
 package com.github.rholder.retry;
 
 /**
- * This is a strategy used to decide how a retryer should block between retry
- * attempts. Normally this is just a Thread.sleep(), but implementations can be
- * something more elaborate if desired.
+ * 这是用于确定重试器应如何在两次重试之间阻塞的策略。
+ * 通常，这只是一个Thread.sleep()，但是如果需要的话，实现可能会更加复杂。
  */
 public interface BlockStrategy {
 

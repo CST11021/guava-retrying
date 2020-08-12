@@ -17,14 +17,14 @@
 package com.github.rholder.retry;
 
 /**
- * A strategy used to decide how long to sleep before retrying after a failed attempt.
+ * 一种策略，用于确定尝试失败后重试之前要sleep多长时间.
  *
  * @author JB
  */
 public interface WaitStrategy {
 
     /**
-     * Returns the time, in milliseconds, to sleep before retrying.
+     * 返回重试之前进入睡眠状态的时间（以毫秒为单位）。
      *
      * @param failedAttempt the previous failed {@code Attempt}
      * @return the sleep time before next attempt

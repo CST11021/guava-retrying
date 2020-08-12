@@ -24,20 +24,20 @@ import javax.annotation.concurrent.Immutable;
 import com.google.common.base.Preconditions;
 
 /**
- * Factory class for {@link StopStrategy} instances.
+ * 用于创建{@link StopStrategy}实例的工厂类
  *
  * @author JB
  */
 public final class StopStrategies {
+
+    /** 表示充不停止重试的策略 */
     private static final StopStrategy NEVER_STOP = new NeverStopStrategy();
 
     private StopStrategies() {
     }
 
     /**
-     * Returns a stop strategy which never stops retrying. It might be best to
-     * try not to abuse services with this kind of behavior when small wait
-     * intervals between retry attempts are being used.
+     * 返回一个从不停止重试任务的策略，即一直重试知道任务执行成功
      *
      * @return a stop strategy which never stops
      */
@@ -46,7 +46,7 @@ public final class StopStrategies {
     }
 
     /**
-     * Returns a stop strategy which stops after N failed attempts.
+     * 返回停止策略，该策略在N次失败尝试后停止重试
      *
      * @param attemptNumber the number of failed attempts before stopping
      * @return a stop strategy which stops after {@code attemptNumber} attempts
@@ -56,11 +56,9 @@ public final class StopStrategies {
     }
 
     /**
-     * Returns a stop strategy which stops after a given delay. If an
-     * unsuccessful attempt is made, this {@link StopStrategy} will check if the
-     * amount of time that's passed from the first attempt has exceeded the
-     * given delay amount. If it has exceeded this delay, then using this
-     * strategy causes the retrying to stop.
+     * 返回在给定延迟后停止的停止策略.
+     * 如果尝试失败，则此{@link StopStrategy}将检查从第一次尝试开始经过的时间是否超过了给定的延迟时间.
+     * 如果已超过此延迟，则使用此策略将导致重试停止
      *
      * @param delayInMillis the delay, in milliseconds, starting from first attempt
      * @return a stop strategy which stops after {@code delayInMillis} time in milliseconds
@@ -87,6 +85,9 @@ public final class StopStrategies {
         return new StopAfterDelayStrategy(timeUnit.toMillis(duration));
     }
 
+    /**
+     * 从不停止重试任务的策略，即一直重试知道任务执行成功
+     */
     @Immutable
     private static final class NeverStopStrategy implements StopStrategy {
         @Override
@@ -95,6 +96,9 @@ public final class StopStrategies {
         }
     }
 
+    /**
+     * 在N次失败尝试后停止重试
+     */
     @Immutable
     private static final class StopAfterAttemptStrategy implements StopStrategy {
         private final int maxAttemptNumber;
@@ -110,8 +114,13 @@ public final class StopStrategies {
         }
     }
 
+    /**
+     * 根据时间判断是否要停止重试
+     */
     @Immutable
     private static final class StopAfterDelayStrategy implements StopStrategy {
+
+        /** 从第一次尝试开始经过的时间是否超过了给定的延迟时间，如果超过了，则停止重试 */
         private final long maxDelay;
 
         public StopAfterDelayStrategy(long maxDelay) {

@@ -19,8 +19,7 @@ package com.github.rholder.retry;
 import java.util.concurrent.ExecutionException;
 
 /**
- * An attempt of a call, which resulted either in a result returned by the call,
- * or in a Throwable thrown by the call.
+ * An attempt of a call, which resulted either in a result returned by the call, or in a Throwable thrown by the call.
  *
  * @param <V> The type returned by the wrapped callable.
  * @author JB
@@ -37,15 +36,14 @@ public interface Attempt<V> {
     public V get() throws ExecutionException;
 
     /**
-     * Tells if the call returned a result or not
+     * 判断该异步任务是否有返回结果
      *
-     * @return <code>true</code> if the call returned a result, <code>false</code>
-     *         if it threw an exception
+     * @return <code>true</code> if the call returned a result, <code>false</code> if it threw an exception
      */
     public boolean hasResult();
 
     /**
-     * Tells if the call threw an exception or not
+     * 判断该异步任务是否执行异常
      *
      * @return <code>true</code> if the call threw an exception, <code>false</code>
      *         if it returned a result
@@ -53,7 +51,7 @@ public interface Attempt<V> {
     public boolean hasException();
 
     /**
-     * Gets the result of the call
+     * 获取异步任务的执行结果
      *
      * @return the result of the call
      * @throws IllegalStateException if the call didn't return a result, but threw an exception,
@@ -62,7 +60,7 @@ public interface Attempt<V> {
     public V getResult() throws IllegalStateException;
 
     /**
-     * Gets the exception thrown by the call
+     * 获取异步任务发生的异常
      *
      * @return the exception thrown by the call
      * @throws IllegalStateException if the call didn't throw an exception,
@@ -71,14 +69,14 @@ public interface Attempt<V> {
     public Throwable getExceptionCause() throws IllegalStateException;
 
     /**
-     * The number, starting from 1, of this attempt.
+     * 当前重试的次数，从1开始
      *
      * @return the attempt number
      */
     public long getAttemptNumber();
 
     /**
-     * The delay since the start of the first attempt, in milliseconds.
+     * 自首次尝试开始以来的延迟（以毫秒为单位）
      *
      * @return the delay since the start of the first attempt, in milliseconds
      */

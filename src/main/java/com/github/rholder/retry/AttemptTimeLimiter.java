@@ -21,14 +21,18 @@ import java.util.concurrent.Callable;
 /**
  * A rule to wrap any single attempt in a time limit, where it will possibly be interrupted if the limit is exceeded.
  *
- * @param <V> return type of Callable
+ * @param <V> V表示Callable执行后的返回值
  * @author Jason Dunkelberger (dirkraft)
  */
 public interface AttemptTimeLimiter<V> {
+
     /**
-     * @param callable to subject to the time limit
+     * 执行一个任务，该任务受时间限制
+     *
+     * @param callable 要执行的异步任务
      * @return the return of the given callable
      * @throws Exception any exception from this invocation
      */
     V call(Callable<V> callable) throws Exception;
+
 }

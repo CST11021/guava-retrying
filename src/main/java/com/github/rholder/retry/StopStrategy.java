@@ -17,17 +17,18 @@
 package com.github.rholder.retry;
 
 /**
- * A strategy used to decide if a retryer must stop retrying after a failed attempt or not.
+ * 用于确定重试器在失败尝试之后是否必须停止重试的策略。
  *
  * @author JB
  */
 public interface StopStrategy {
 
     /**
-     * Returns <code>true</code> if the retryer should stop retrying.
+     * 如果重试器应停止重试，则返回true
      *
-     * @param failedAttempt the previous failed {@code Attempt}
-     * @return <code>true</code> if the retryer must stop, <code>false</code> otherwise
+     * @param failedAttempt 之前执行的失败的{@code Attempt}
+     * @return 如果retryer要停止任务，则返回true，否则返回false
      */
     boolean shouldStop(Attempt failedAttempt);
+
 }

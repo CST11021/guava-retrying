@@ -44,7 +44,10 @@ import java.util.concurrent.TimeUnit;
  * @author Jason Dunkelberger (dirkraft)
  */
 public final class Retryer<V> {
+
+    /** 用于定义任务停止重试的策略 */
     private final StopStrategy stopStrategy;
+    /** 用于定义下一次任务重试的等待时长策略 */
     private final WaitStrategy waitStrategy;
     private final BlockStrategy blockStrategy;
     private final AttemptTimeLimiter<V> attemptTimeLimiter;
@@ -198,8 +201,11 @@ public final class Retryer<V> {
 
     @Immutable
     static final class ResultAttempt<R> implements Attempt<R> {
+        /** 表示任务执行的结果 */
         private final R result;
+        /** 表示当前是第几次重试 */
         private final long attemptNumber;
+        /** 自首次尝试开始以来的延迟（以毫秒为单位） */
         private final long delaySinceFirstAttempt;
 
         public ResultAttempt(R result, long attemptNumber, long delaySinceFirstAttempt) {
@@ -244,10 +250,17 @@ public final class Retryer<V> {
         }
     }
 
+    /**
+     *
+     * @param <R>
+     */
     @Immutable
     static final class ExceptionAttempt<R> implements Attempt<R> {
+        /** 表示任务指定的异常信息 */
         private final ExecutionException e;
+        /** 表示当前是第几次重试 */
         private final long attemptNumber;
+        /** 自首次尝试开始以来的延迟（以毫秒为单位） */
         private final long delaySinceFirstAttempt;
 
         public ExceptionAttempt(Throwable cause, long attemptNumber, long delaySinceFirstAttempt) {

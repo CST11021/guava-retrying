@@ -37,51 +37,104 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+/**
+ *
+ */
 public class RetryerBuilderTest {
 
+
+    // 测试等待策略
+
+
+    /**
+     * 测试固定时长的等待策略
+     *
+     * @throws ExecutionException
+     * @throws RetryException
+     */
     @Test
     public void testWithWaitStrategy() throws ExecutionException, RetryException {
+        // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
+
+        // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+                // 下一次任务重试开始前，等待50毫秒
                 .withWaitStrategy(WaitStrategies.fixedWait(50L, TimeUnit.MILLISECONDS))
+                // 如果结果是空的，则需要重试任务
                 .retryIfResult(Predicates.<Boolean>isNull())
                 .build();
+
         long start = System.currentTimeMillis();
         boolean result = retryer.call(callable);
         assertTrue(System.currentTimeMillis() - start >= 250L);
         assertTrue(result);
     }
 
+    /**
+     * 测试复合式的等待策略：固定时长策略 + 斐波那契策略
+     *
+     * @throws ExecutionException
+     * @throws RetryException
+     */
     @Test
     public void testWithMoreThanOneWaitStrategyOneBeingFixed() throws ExecutionException, RetryException {
+        // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
+
+        // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-                .withWaitStrategy(WaitStrategies.join(
-                        WaitStrategies.fixedWait(50L, TimeUnit.MILLISECONDS),
-                        WaitStrategies.fibonacciWait(10, Long.MAX_VALUE, TimeUnit.MILLISECONDS)))
+                .withWaitStrategy(
+                        // 复合式的等待策略
+                        WaitStrategies.join(
+                            WaitStrategies.fixedWait(50L, TimeUnit.MILLISECONDS),
+                            WaitStrategies.fibonacciWait(10, Long.MAX_VALUE, TimeUnit.MILLISECONDS)
+                        )
+                )
+                // 如果结果是空的，则需要重试任务
                 .retryIfResult(Predicates.<Boolean>isNull())
                 .build();
+
         long start = System.currentTimeMillis();
         boolean result = retryer.call(callable);
         assertTrue(System.currentTimeMillis() - start >= 370L);
         assertTrue(result);
     }
 
+    /**
+     * 测试复合式的等待策略：递增式策略 + 斐波那契策略
+     *
+     * @throws ExecutionException
+     * @throws RetryException
+     */
     @Test
     public void testWithMoreThanOneWaitStrategyOneBeingIncremental() throws ExecutionException, RetryException {
+        // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
+
+        // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-                .withWaitStrategy(WaitStrategies.join(
-                        WaitStrategies.incrementingWait(10L, TimeUnit.MILLISECONDS, 10L, TimeUnit.MILLISECONDS),
-                        WaitStrategies.fibonacciWait(10, Long.MAX_VALUE, TimeUnit.MILLISECONDS)))
+                .withWaitStrategy(
+                        WaitStrategies.join(
+                            WaitStrategies.incrementingWait(10L, TimeUnit.MILLISECONDS, 10L, TimeUnit.MILLISECONDS),
+                            WaitStrategies.fibonacciWait(10, Long.MAX_VALUE, TimeUnit.MILLISECONDS)
+                        )
+                )
+                // 如果结果是空的，则需要重试任务
                 .retryIfResult(Predicates.<Boolean>isNull())
                 .build();
+
         long start = System.currentTimeMillis();
         boolean result = retryer.call(callable);
         assertTrue(System.currentTimeMillis() - start >= 270L);
         assertTrue(result);
     }
 
+    /**
+     * 创建一个任务
+     *
+     * @return
+     */
     private Callable<Boolean> notNullAfter5Attempts() {
         return new Callable<Boolean>() {
             int counter = 0;
@@ -97,13 +150,33 @@ public class RetryerBuilderTest {
         };
     }
 
+
+
+
+
+
+
+
+    // 测试停止重试策略
+
+    /**
+     * 测试指定重试次数后停止重试
+     *
+     * @throws ExecutionException
+     */
     @Test
     public void testWithStopStrategy() throws ExecutionException {
+        // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
+
+        // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+                // 尝试重试3次
                 .withStopStrategy(StopStrategies.stopAfterAttempt(3))
+                // 如果结果是空的，则需要重试任务
                 .retryIfResult(Predicates.<Boolean>isNull())
                 .build();
+
         try {
             retryer.call(callable);
             fail("RetryException expected");
@@ -114,7 +187,9 @@ public class RetryerBuilderTest {
 
     @Test
     public void testWithBlockStrategy() throws ExecutionException, RetryException {
+        // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
+
         final AtomicInteger counter = new AtomicInteger();
         BlockStrategy blockStrategy = new BlockStrategy() {
             @Override
@@ -123,6 +198,7 @@ public class RetryerBuilderTest {
             }
         };
 
+        // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
                 .withBlockStrategy(blockStrategy)
                 .retryIfResult(Predicates.<Boolean>isNull())

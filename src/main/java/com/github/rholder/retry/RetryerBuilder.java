@@ -33,9 +33,12 @@ import java.util.List;
  */
 public class RetryerBuilder<V> {
     private AttemptTimeLimiter<V> attemptTimeLimiter;
+    /** 用于定义任务是否停止重试的策略 */
     private StopStrategy stopStrategy;
+    /** 用于定义下一次任务重试的等待时长策略 */
     private WaitStrategy waitStrategy;
     private BlockStrategy blockStrategy;
+    /** 拒绝任务重试的谓词，则默认总数返回false，表示总是要执行，一般通过{@link #retryIfResult}方法创建自定义的谓词来装饰该谓词 */
     private Predicate<Attempt<V>> rejectionPredicate = Predicates.alwaysFalse();
     private List<RetryListener> listeners = new ArrayList<RetryListener>();
 
@@ -172,8 +175,7 @@ public class RetryerBuilder<V> {
     /**
      * Configures the retryer to retry if the result satisfies the given predicate.
      *
-     * @param resultPredicate a predicate applied to the result, and which causes the retryer
-     *                        to retry if the predicate is satisfied
+     * @param resultPredicate 谓词应用于结果，如果满足谓词，则触发重试
      * @return <code>this</code>
      */
     public RetryerBuilder<V> retryIfResult(@Nonnull Predicate<V> resultPredicate) {

@@ -27,19 +27,27 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Factory class for instances of {@link WaitStrategy}.
+ * 用于创建{@link WaitStrategy}实例的工厂类，包括创建一下几种类型的重试等待策略：
+ * 1、固定时长的重试等待策略
+ * 2、随机式的重试等待策略
+ * 3、递增式的重试等待策略
+ * 4、指数级重试等待策略
+ * 5、斐波纳契策略
+ * 6、根据异常类型来自定义等待时长的策略
+ * 7、复合式的重试等待策略
  *
  * @author JB
  */
 public final class WaitStrategies {
 
+    /** 表示无需等待的重试策略，即立即重试 */
     private static final WaitStrategy NO_WAIT_STRATEGY = new FixedWaitStrategy(0L);
 
     private WaitStrategies() {
     }
 
     /**
-     * Returns a wait strategy that doesn't sleep at all before retrying. Use this at your own risk.
+     * 返回一个立即重试策略
      *
      * @return a wait strategy that doesn't wait between retries
      */
@@ -48,10 +56,10 @@ public final class WaitStrategies {
     }
 
     /**
-     * Returns a wait strategy that sleeps a fixed amount of time before retrying.
+     * 返回一个固定等待时长的重试策略
      *
-     * @param sleepTime the time to sleep
-     * @param timeUnit  the unit of the time to sleep
+     * @param sleepTime 等待时间
+     * @param timeUnit  等待时间单位
      * @return a wait strategy that sleeps a fixed amount of time
      * @throws IllegalStateException if the sleep time is &lt; 0
      */
@@ -61,10 +69,10 @@ public final class WaitStrategies {
     }
 
     /**
-     * Returns a strategy that sleeps a random amount of time before retrying.
+     * 返回一个随机等待时间的重试策略
      *
-     * @param maximumTime the maximum time to sleep
-     * @param timeUnit    the unit of the maximum time
+     * @param maximumTime 随机的最长睡眠时间
+     * @param timeUnit    时间单位
      * @return a wait strategy with a random wait time
      * @throws IllegalStateException if the maximum sleep time is &lt;= 0.
      */
@@ -74,12 +82,12 @@ public final class WaitStrategies {
     }
 
     /**
-     * Returns a strategy that sleeps a random amount of time before retrying.
+     * 返回一个随机等待时间的重试策略
      *
-     * @param minimumTime     the minimum time to sleep
-     * @param minimumTimeUnit the unit of the minimum time
-     * @param maximumTime     the maximum time to sleep
-     * @param maximumTimeUnit the unit of the maximum time
+     * @param minimumTime     最少等待多长时间
+     * @param minimumTimeUnit minimumTime的时间单位
+     * @param maximumTime     最长等待多长时间
+     * @param maximumTimeUnit maximumTime的时间单位
      * @return a wait strategy with a random wait time
      * @throws IllegalStateException if the minimum sleep time is &lt; 0, or if the
      *                               maximum sleep time is less than (or equals to) the minimum.
@@ -95,14 +103,12 @@ public final class WaitStrategies {
     }
 
     /**
-     * Returns a strategy that sleeps a fixed amount of time after the first
-     * failed attempt and in incrementing amounts of time after each additional
-     * failed attempt.
+     * 返回一个策略，该策略在第一次尝试失败后休眠固定的时间，并在每次其他尝试失败后增加睡眠的时间.
      *
-     * @param initialSleepTime     the time to sleep before retrying the first time
-     * @param initialSleepTimeUnit the unit of the initial sleep time
-     * @param increment            the increment added to the previous sleep time after each failed attempt
-     * @param incrementTimeUnit    the unit of the increment
+     * @param initialSleepTime     重试第一次之前的睡眠时间
+     * @param initialSleepTimeUnit initialSleepTime的时间单位
+     * @param increment            每次尝试失败后添加到上一个睡眠时间的增量
+     * @param incrementTimeUnit    increment的时间单位
      * @return a wait strategy that incrementally sleeps an additional fixed time after each failed attempt
      */
     public static WaitStrategy incrementingWait(long initialSleepTime,
@@ -116,8 +122,7 @@ public final class WaitStrategies {
     }
 
     /**
-     * Returns a strategy which sleeps for an exponential amount of time after the first failed attempt,
-     * and in exponentially incrementing amounts after each failed attempt up to Long.MAX_VALUE.
+     * 返回一个策略，该策略在第一次失败尝试后将睡眠一段指数的时间，并在每次失败尝试后以指数形式递增，直至Long.MAX_VALUE。
      *
      * @return a wait strategy that increments with each failed attempt using exponential backoff
      */
@@ -129,12 +134,11 @@ public final class WaitStrategies {
      * Returns a strategy which sleeps for an exponential amount of time after the first failed attempt,
      * and in exponentially incrementing amounts after each failed attempt up to the maximumTime.
      *
-     * @param maximumTime     the maximum time to sleep
-     * @param maximumTimeUnit the unit of the maximum time
+     * @param maximumTime     最长睡眠时间
+     * @param maximumTimeUnit 最长时间的单位
      * @return a wait strategy that increments with each failed attempt using exponential backoff
      */
-    public static WaitStrategy exponentialWait(long maximumTime,
-                                               @Nonnull TimeUnit maximumTimeUnit) {
+    public static WaitStrategy exponentialWait(long maximumTime, @Nonnull TimeUnit maximumTimeUnit) {
         Preconditions.checkNotNull(maximumTimeUnit, "The maximum time unit may not be null");
         return new ExponentialWaitStrategy(1, maximumTimeUnit.toMillis(maximumTime));
     }
@@ -145,19 +149,20 @@ public final class WaitStrategies {
      * The wait time between the retries can be controlled by the multiplier.
      * nextWaitTime = exponentialIncrement * {@code multiplier}.
      *
-     * @param multiplier      multiply the wait time calculated by this
-     * @param maximumTime     the maximum time to sleep
-     * @param maximumTimeUnit the unit of the maximum time
+     * @param multiplier      乘以由此计算的等待时间
+     * @param maximumTime     最长睡眠时间
+     * @param maximumTimeUnit 最长时间的单位
      * @return a wait strategy that increments with each failed attempt using exponential backoff
      */
-    public static WaitStrategy exponentialWait(long multiplier,
-                                               long maximumTime,
-                                               @Nonnull TimeUnit maximumTimeUnit) {
+    public static WaitStrategy exponentialWait(long multiplier, long maximumTime, @Nonnull TimeUnit maximumTimeUnit) {
         Preconditions.checkNotNull(maximumTimeUnit, "The maximum time unit may not be null");
         return new ExponentialWaitStrategy(multiplier, maximumTimeUnit.toMillis(maximumTime));
     }
 
     /**
+     * 斐波纳契策略，例如这样一个数列：0、1、1、2、3、5、8、13、21、34、……
+     * 后面一个值等于前面两个的值之和
+     *
      * Returns a strategy which sleeps for an increasing amount of time after the first failed attempt,
      * and in Fibonacci increments after each failed attempt up to {@link Long#MAX_VALUE}.
      *
@@ -175,8 +180,7 @@ public final class WaitStrategies {
      * @param maximumTimeUnit the unit of the maximum time
      * @return a wait strategy that increments with each failed attempt using a Fibonacci sequence
      */
-    public static WaitStrategy fibonacciWait(long maximumTime,
-                                             @Nonnull TimeUnit maximumTimeUnit) {
+    public static WaitStrategy fibonacciWait(long maximumTime, @Nonnull TimeUnit maximumTimeUnit) {
         Preconditions.checkNotNull(maximumTimeUnit, "The maximum time unit may not be null");
         return new FibonacciWaitStrategy(1, maximumTimeUnit.toMillis(maximumTime));
     }
@@ -192,20 +196,16 @@ public final class WaitStrategies {
      * @param maximumTimeUnit the unit of the maximum time
      * @return a wait strategy that increments with each failed attempt using a Fibonacci sequence
      */
-    public static WaitStrategy fibonacciWait(long multiplier,
-                                             long maximumTime,
-                                             @Nonnull TimeUnit maximumTimeUnit) {
+    public static WaitStrategy fibonacciWait(long multiplier, long maximumTime, @Nonnull TimeUnit maximumTimeUnit) {
         Preconditions.checkNotNull(maximumTimeUnit, "The maximum time unit may not be null");
         return new FibonacciWaitStrategy(multiplier, maximumTimeUnit.toMillis(maximumTime));
     }
 
     /**
-     * Returns a strategy which sleeps for an amount of time based on the Exception that occurred. The
-     * {@code function} determines how the sleep time should be calculated for the given
-     * {@code exceptionClass}. If the exception does not match, a wait time of 0 is returned.
+     * 返回一种特定的异常等待策略，如果上一次任务异常是我们关心的异常，根据Function函数计算等待时间，如果异常不匹配，则返回等待时间0，立即重试
      *
-     * @param function       function to calculate sleep time
-     * @param exceptionClass class to calculate sleep time from
+     * @param function       计算睡眠时间的函数
+     * @param exceptionClass 用于计算睡眠时间的异常类
      * @return a wait strategy calculated from the failed attempt
      */
     public static <T extends Throwable> WaitStrategy exceptionWait(@Nonnull Class<T> exceptionClass,
@@ -216,6 +216,8 @@ public final class WaitStrategies {
     }
 
     /**
+     * 复合式的重试等待策略，将每个等待的时长相加，即为最终的等待时长
+     *
      * Joins one or more wait strategies to derive a composite wait strategy.
      * The new joined strategy will have a wait time which is total of all wait times computed one after another in order.
      *
@@ -229,6 +231,9 @@ public final class WaitStrategies {
         return new CompositeWaitStrategy(waitStrategyList);
     }
 
+    /**
+     * 固定时长的重试等待策略
+     */
     @Immutable
     private static final class FixedWaitStrategy implements WaitStrategy {
         private final long sleepTime;
@@ -244,6 +249,9 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 随机式的重试等待策略
+     */
     @Immutable
     private static final class RandomWaitStrategy implements WaitStrategy {
         private static final Random RANDOM = new Random();
@@ -265,6 +273,9 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 递增式的重试等待策略
+     */
     @Immutable
     private static final class IncrementingWaitStrategy implements WaitStrategy {
         private final long initialSleepTime;
@@ -284,13 +295,18 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 指数级重试等待策略
+     */
     @Immutable
     private static final class ExponentialWaitStrategy implements WaitStrategy {
+
+        /** 表示一个乘数 */
         private final long multiplier;
+        /** 表示最长等待时间 */
         private final long maximumWait;
 
-        public ExponentialWaitStrategy(long multiplier,
-                                       long maximumWait) {
+        public ExponentialWaitStrategy(long multiplier, long maximumWait) {
             Preconditions.checkArgument(multiplier > 0L, "multiplier must be > 0 but is %d", multiplier);
             Preconditions.checkArgument(maximumWait >= 0L, "maximumWait must be >= 0 but is %d", maximumWait);
             Preconditions.checkArgument(multiplier < maximumWait, "multiplier must be < maximumWait but is %d", multiplier);
@@ -300,7 +316,9 @@ public final class WaitStrategies {
 
         @Override
         public long computeSleepTime(Attempt failedAttempt) {
+            // 2的n次方，比如：2的3方等于8
             double exp = Math.pow(2, failedAttempt.getAttemptNumber());
+            // Math.round：返回一个数字四舍五入后最接近的整数
             long result = Math.round(multiplier * exp);
             if (result > maximumWait) {
                 result = maximumWait;
@@ -309,6 +327,10 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 斐波纳契策略，例如这样一个数列：0、1、1、2、3、5、8、13、21、34、……
+     * 后面一个值等于前面两个的值之和
+     */
     @Immutable
     private static final class FibonacciWaitStrategy implements WaitStrategy {
         private final long multiplier;
@@ -352,6 +374,9 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 复合式的重试等待策略，将每个等待的时长相加，即为最终的等待时长
+     */
     @Immutable
     private static final class CompositeWaitStrategy implements WaitStrategy {
         private final List<WaitStrategy> waitStrategies;
@@ -371,6 +396,11 @@ public final class WaitStrategies {
         }
     }
 
+    /**
+     * 根据异常类型来自定义等待时长的策略
+     *
+     * @param <T>
+     */
     @Immutable
     private static final class ExceptionWaitStrategy<T extends Throwable> implements WaitStrategy {
         private final Class<T> exceptionClass;
@@ -384,6 +414,7 @@ public final class WaitStrategies {
         @SuppressWarnings({"ThrowableResultOfMethodCallIgnored", "ConstantConditions", "unchecked"})
         @Override
         public long computeSleepTime(Attempt lastAttempt) {
+            // 判断任务上一次指定有没有发生异常
             if (lastAttempt.hasException()) {
                 Throwable cause = lastAttempt.getExceptionCause();
                 if (exceptionClass.isAssignableFrom(cause.getClass())) {
