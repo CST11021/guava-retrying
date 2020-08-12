@@ -205,9 +205,13 @@ public class RetryerBuilder<V> {
      * @return the built retryer.
      */
     public Retryer<V> build() {
+        // 默认使用任务执行时间没有限制的策略
         AttemptTimeLimiter<V> theAttemptTimeLimiter = attemptTimeLimiter == null ? AttemptTimeLimiters.<V>noTimeLimit() : attemptTimeLimiter;
+        // 默认使用充不停止重试的策略
         StopStrategy theStopStrategy = stopStrategy == null ? StopStrategies.neverStop() : stopStrategy;
+        // 默认使用重试不等待的策略
         WaitStrategy theWaitStrategy = waitStrategy == null ? WaitStrategies.noWait() : waitStrategy;
+        // 默认使用重试时使用线程sleep的策略
         BlockStrategy theBlockStrategy = blockStrategy == null ? BlockStrategies.threadSleepStrategy() : blockStrategy;
 
         return new Retryer<V>(theAttemptTimeLimiter, theStopStrategy, theWaitStrategy, theBlockStrategy, rejectionPredicate, listeners);
