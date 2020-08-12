@@ -49,9 +49,12 @@ public final class Retryer<V> {
     private final StopStrategy stopStrategy;
     /** 用于定义下一次任务重试的等待时长策略 */
     private final WaitStrategy waitStrategy;
+    /** 阻塞策略：一般使用线程sleep的方式进行阻塞，WaitStrategy返回需要等待多久，然后通过BlockStrategy来实现线程阻塞 */
     private final BlockStrategy blockStrategy;
     private final AttemptTimeLimiter<V> attemptTimeLimiter;
+    /** 表示是否要进行任务重试的谓词，（该命名表示拒绝任务重试的谓词，所以默认总是返回false，表示总是要重试） */
     private final Predicate<Attempt<V>> rejectionPredicate;
+    /** 重试监听，当触发任务执行时，触发监听 */
     private final Collection<RetryListener> listeners;
 
     /**
@@ -157,7 +160,9 @@ public final class Retryer<V> {
      */
     public V call(Callable<V> callable) throws ExecutionException, RetryException {
         long startTime = System.nanoTime();
+        // 第一次执行，索引从1开始
         for (int attemptNumber = 1; ; attemptNumber++) {
+
             Attempt<V> attempt;
             try {
                 V result = attemptTimeLimiter.call(callable);
@@ -170,9 +175,12 @@ public final class Retryer<V> {
                 listener.onRetry(attempt);
             }
 
+            // 判断是否可以停止重试了，如果可以停止了，则直接返回结果
             if (!rejectionPredicate.apply(attempt)) {
                 return attempt.get();
             }
+
+            // 根据停止任务重试策略判断是否要停止任务，如果要停止，则抛出一个RetryException，否则，根据重试等待策略进行下一次重试
             if (stopStrategy.shouldStop(attempt)) {
                 throw new RetryException(attemptNumber, attempt);
             } else {

@@ -185,12 +185,16 @@ public class RetryerBuilderTest {
         }
     }
 
+
+
+
     @Test
     public void testWithBlockStrategy() throws ExecutionException, RetryException {
         // 定义一个任务
         Callable<Boolean> callable = notNullAfter5Attempts();
 
         final AtomicInteger counter = new AtomicInteger();
+
         BlockStrategy blockStrategy = new BlockStrategy() {
             @Override
             public void block(long sleepTime) throws InterruptedException {
@@ -200,7 +204,9 @@ public class RetryerBuilderTest {
 
         // 设置重试策略
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+                //
                 .withBlockStrategy(blockStrategy)
+                // 如果结果是空的，则需要重试任务
                 .retryIfResult(Predicates.<Boolean>isNull())
                 .build();
         final int retryCount = 5;

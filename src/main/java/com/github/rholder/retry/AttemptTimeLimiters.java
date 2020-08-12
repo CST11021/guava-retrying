@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Factory class for instances of {@link AttemptTimeLimiter}
+ * 用于创建{@link AttemptTimeLimiter}实例的工厂类
  *
  * @author Jason Dunkelberger (dirkraft)
  */
@@ -37,6 +37,8 @@ public class AttemptTimeLimiters {
     }
 
     /**
+     *
+     *
      * @param <V> The type of the computation result.
      * @return an {@link AttemptTimeLimiter} impl which has no time limit
      */
@@ -45,9 +47,8 @@ public class AttemptTimeLimiters {
     }
 
     /**
-     * For control over thread management, it is preferable to offer an {@link ExecutorService} through the other
-     * factory method, {@link #fixedTimeLimit(long, TimeUnit, ExecutorService)}. See the note on
-     * {@link SimpleTimeLimiter#SimpleTimeLimiter(ExecutorService)}, which this AttemptTimeLimiter uses.
+     * 为了控制线程管理，最好通过其他工厂方法{@link #fixedTimeLimit(long, TimeUnit, ExecutorService)}提供一个{@link ExecutorService}。
+     * 请参阅{@link SimpleTimeLimiter＃SimpleTimeLimiter（ExecutorService）}上的注释，此AttemptTimeLimiter使用该注释。
      *
      * @param duration that an attempt may persist before being circumvented
      * @param timeUnit of the 'duration' arg

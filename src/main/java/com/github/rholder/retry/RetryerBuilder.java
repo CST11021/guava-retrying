@@ -32,14 +32,18 @@ import java.util.List;
  * @author Jason Dunkelberger (dirkraft)
  */
 public class RetryerBuilder<V> {
+
+    /** 用于设置一个任务，该任务受时间限制，如果任务执行时间超过了预设值的时间，则抛ExecutionException异常 */
     private AttemptTimeLimiter<V> attemptTimeLimiter;
     /** 用于定义任务是否停止重试的策略 */
     private StopStrategy stopStrategy;
     /** 用于定义下一次任务重试的等待时长策略 */
     private WaitStrategy waitStrategy;
+    /** 阻塞策略：一般使用线程sleep的方式进行阻塞，WaitStrategy返回需要等待多久，然后通过BlockStrategy来实现线程阻塞 */
     private BlockStrategy blockStrategy;
-    /** 拒绝任务重试的谓词，则默认总数返回false，表示总是要执行，一般通过{@link #retryIfResult}方法创建自定义的谓词来装饰该谓词 */
+    /** 表示是否要进行任务重试的谓词，（该命名表示拒绝任务重试的谓词，所以默认总是返回false，表示总是要重试，一般通过{@link #retryIfResult}方法创建自定义的谓词来装饰该谓词） */
     private Predicate<Attempt<V>> rejectionPredicate = Predicates.alwaysFalse();
+    /** 重试监听，当触发任务执行时，触发监听 */
     private List<RetryListener> listeners = new ArrayList<RetryListener>();
 
     private RetryerBuilder() {
@@ -55,6 +59,22 @@ public class RetryerBuilder<V> {
         return new RetryerBuilder<V>();
     }
 
+    // 设置任务
+
+    /**
+     * 设置任务的执行时间限制，如果任务执行时间超过了预设值的时间，则抛ExecutionException异常
+     *
+     * @param attemptTimeLimiter to apply to each attempt
+     * @return <code>this</code>
+     */
+    public RetryerBuilder<V> withAttemptTimeLimiter(@Nonnull AttemptTimeLimiter<V> attemptTimeLimiter) {
+        Preconditions.checkNotNull(attemptTimeLimiter);
+        this.attemptTimeLimiter = attemptTimeLimiter;
+        return this;
+    }
+
+    // 设置重试监听
+
     /**
      * Adds a listener that will be notified of each attempt that is made
      *
@@ -67,9 +87,13 @@ public class RetryerBuilder<V> {
         return this;
     }
 
+
+
+
+    // 设置各种策略
+
     /**
-     * Sets the wait strategy used to decide how long to sleep between failed attempts.
-     * The default strategy is to retry immediately after a failed attempt.
+     * 设置重试等待策略
      *
      * @param waitStrategy the strategy used to sleep between failed attempts
      * @return <code>this</code>
@@ -83,7 +107,7 @@ public class RetryerBuilder<V> {
     }
 
     /**
-     * Sets the stop strategy used to decide when to stop retrying. The default strategy is to not stop at all .
+     * 设置停止重试策略
      *
      * @param stopStrategy the strategy used to decide when to stop retrying
      * @return <code>this</code>
@@ -95,7 +119,6 @@ public class RetryerBuilder<V> {
         this.stopStrategy = stopStrategy;
         return this;
     }
-
 
     /**
      * Sets the block strategy used to decide how to block between retry attempts. The default strategy is to use Thread#sleep().
@@ -112,21 +135,14 @@ public class RetryerBuilder<V> {
     }
 
 
-    /**
-     * Configures the retryer to limit the duration of any particular attempt by the given duration.
-     *
-     * @param attemptTimeLimiter to apply to each attempt
-     * @return <code>this</code>
-     */
-    public RetryerBuilder<V> withAttemptTimeLimiter(@Nonnull AttemptTimeLimiter<V> attemptTimeLimiter) {
-        Preconditions.checkNotNull(attemptTimeLimiter);
-        this.attemptTimeLimiter = attemptTimeLimiter;
-        return this;
-    }
+
+
+
+
+    // 设置重试谓词
 
     /**
-     * Configures the retryer to retry if an exception (i.e. any <code>Exception</code> or subclass
-     * of <code>Exception</code>) is thrown by the call.
+     * 设置如果发生Exception异常，则进行重试的谓词
      *
      * @return <code>this</code>
      */
@@ -136,8 +152,7 @@ public class RetryerBuilder<V> {
     }
 
     /**
-     * Configures the retryer to retry if a runtime exception (i.e. any <code>RuntimeException</code> or subclass
-     * of <code>RuntimeException</code>) is thrown by the call.
+     * 设置如果发生RuntimeException异常，则进行重试的谓词
      *
      * @return <code>this</code>
      */
@@ -147,8 +162,7 @@ public class RetryerBuilder<V> {
     }
 
     /**
-     * Configures the retryer to retry if an exception of the given class (or subclass of the given class) is
-     * thrown by the call.
+     * 设置如果发生指定的异常，则进行重试的谓词
      *
      * @param exceptionClass the type of the exception which should cause the retryer to retry
      * @return <code>this</code>
@@ -160,8 +174,7 @@ public class RetryerBuilder<V> {
     }
 
     /**
-     * Configures the retryer to retry if an exception satisfying the given predicate is
-     * thrown by the call.
+     * 设置如果发生Exception异常，或者满足自定义谓词的符合谓词
      *
      * @param exceptionPredicate the predicate which causes a retry if satisfied
      * @return <code>this</code>
@@ -173,7 +186,7 @@ public class RetryerBuilder<V> {
     }
 
     /**
-     * Configures the retryer to retry if the result satisfies the given predicate.
+     * 根据结果判断是否要进行重试的谓词
      *
      * @param resultPredicate 谓词应用于结果，如果满足谓词，则触发重试
      * @return <code>this</code>
@@ -183,6 +196,8 @@ public class RetryerBuilder<V> {
         rejectionPredicate = Predicates.or(rejectionPredicate, new ResultPredicate<V>(resultPredicate));
         return this;
     }
+
+
 
     /**
      * Builds the retryer.
@@ -197,6 +212,7 @@ public class RetryerBuilder<V> {
 
         return new Retryer<V>(theAttemptTimeLimiter, theStopStrategy, theWaitStrategy, theBlockStrategy, rejectionPredicate, listeners);
     }
+
 
     private static final class ExceptionClassPredicate<V> implements Predicate<Attempt<V>> {
 

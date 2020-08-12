@@ -17,8 +17,7 @@
 package com.github.rholder.retry;
 
 /**
- * 这是用于确定重试器应如何在两次重试之间阻塞的策略。
- * 通常，这只是一个Thread.sleep()，但是如果需要的话，实现可能会更加复杂。
+ * 这是用于确定重试器应如何在两次重试之间阻塞的策略，通常这只是一个Thread.sleep()，但是如果需要的话，实现可能会更加复杂。
  */
 public interface BlockStrategy {
 

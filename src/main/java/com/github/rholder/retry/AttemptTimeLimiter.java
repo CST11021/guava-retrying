@@ -19,7 +19,7 @@ package com.github.rholder.retry;
 import java.util.concurrent.Callable;
 
 /**
- * A rule to wrap any single attempt in a time limit, where it will possibly be interrupted if the limit is exceeded.
+ * 执行一个任务，该任务受时间限制，如果任务执行时间超过了预设值的时间，则抛ExecutionException异常
  *
  * @param <V> V表示Callable执行后的返回值
  * @author Jason Dunkelberger (dirkraft)
@@ -27,7 +27,7 @@ import java.util.concurrent.Callable;
 public interface AttemptTimeLimiter<V> {
 
     /**
-     * 执行一个任务，该任务受时间限制
+     * 执行一个任务，该任务受时间限制，如果任务执行时间超过了预设值的时间，则抛ExecutionException异常
      *
      * @param callable 要执行的异步任务
      * @return the return of the given callable

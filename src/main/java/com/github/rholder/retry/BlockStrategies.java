@@ -19,18 +19,18 @@ package com.github.rholder.retry;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * Factory class for {@link BlockStrategy} instances.
+ * 用于创建{@link BlockStrategy}实例的工厂类，
  */
 public final class BlockStrategies {
 
+    /** 表示一个用线程sleep的阻塞策略 */
     private static final BlockStrategy THREAD_SLEEP_STRATEGY = new ThreadSleepStrategy();
 
     private BlockStrategies() {
     }
 
     /**
-     * Returns a block strategy that puts the current thread to sleep between
-     * retries.
+     * 返回一个阻止策略，该策略使当前线程在重试之间进入睡眠状态。
      *
      * @return a block strategy that puts the current thread to sleep between retries
      */
@@ -46,4 +46,5 @@ public final class BlockStrategies {
             Thread.sleep(sleepTime);
         }
     }
+
 }

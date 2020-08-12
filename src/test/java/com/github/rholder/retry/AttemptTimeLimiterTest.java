@@ -30,17 +30,21 @@ import java.util.concurrent.TimeUnit;
 public class AttemptTimeLimiterTest {
 
     Retryer<Void> r = RetryerBuilder.<Void>newBuilder()
+            // 任务执行时间如果超过一秒，则抛异常
             .withAttemptTimeLimiter(AttemptTimeLimiters.<Void>fixedTimeLimit(1, TimeUnit.SECONDS))
             .build();
 
     @Test
     public void testAttemptTimeLimit() throws ExecutionException, RetryException {
+
+        // 测试任务执行的时间不会超过一秒，不会一次
         try {
             r.call(new SleepyOut(0L));
         } catch (ExecutionException e) {
             Assert.fail("Should not timeout");
         }
 
+        // 测试任务执行的时间超过一秒，抛出一个ExecutionException异常
         try {
             r.call(new SleepyOut(10 * 1000L));
             Assert.fail("Expected timeout exception");

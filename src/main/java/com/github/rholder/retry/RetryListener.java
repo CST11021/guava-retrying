@@ -26,8 +26,7 @@ import com.google.common.annotations.Beta;
 public interface RetryListener {
 
     /**
-     * This method with fire no matter what the result is and before the
-     * rejection predicate and stop strategies are applied.
+     * 当任务被触发执行后，调用该方法，不管结果是什么，并且在应用拒绝谓词和停止策略之前，此方法都会生效
      *
      * @param attempt the current {@link Attempt}
      * @param <V>     the type returned by the retryer callable
