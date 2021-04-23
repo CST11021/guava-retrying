@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -98,6 +99,46 @@ public class RetryerTest {
             }
         };
 
+    }
+
+    static int count = 0;
+
+    public static void main(String[] args) {
+        Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+                // 如果任务失败则重试
+                .retryIfResult(Predicates.equalTo(false))
+                // 重试5次（包括第一次调用）
+                .withStopStrategy(StopStrategies.stopAfterAttempt(5))
+                // 每次按1秒递增的时间间隔进行重试
+                .withWaitStrategy(
+                        // 任务第一次调用后会sleep 2 秒，后面每次sleep 1秒，2秒，3秒依次类推
+                        WaitStrategies.incrementingWait(2, TimeUnit.SECONDS, 1, TimeUnit.SECONDS)
+                ).build();
+
+        try {
+            retryer.call(createAction());
+        } catch (ExecutionException e) {
+            // 任务制定异常就会走这里
+            System.out.println("ExecutionException");
+        } catch (RetryException e) {
+            // 重试到最后一次都没成功会走这里
+            System.out.println("RetryException");
+        }
+    }
+
+    private static Callable createAction() {
+        return new Callable<Boolean>() {
+
+            @Override
+            public Boolean call() throws Exception {
+                count++;
+                System.out.println(count + "执行任务:" + System.currentTimeMillis());
+                if (count == 7) {
+                    throw new RuntimeException();
+                }
+                return false;
+            }
+        };
     }
 
 }
